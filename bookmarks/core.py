@@ -44,7 +44,7 @@ def api():
         bookmarks = request_data['bookmarks']
     elif request.method == 'POST':
         for bookmark in request_data['bookmarks']:
-            if bookmarks not in bookmarks:
+            if bookmark not in bookmarks:
                 bookmarks.append(bookmark)
 
     # Write out the bookmark data so it will be there when the app launches
