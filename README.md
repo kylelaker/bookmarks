@@ -8,5 +8,4 @@ My bookmark manager
 
 ## Running
 
-For now, `FLASK_APP=bookmarks/core.py flash run`
-
+Run `bookmarks` to start the Flask server.
