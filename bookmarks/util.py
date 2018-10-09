@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -14,3 +16,13 @@ def get_page_title(url, max_len=None):
 
     return soup.title.text
 
+def get_favicon_link(url):
+    result = requests.get(url)
+    soup = BeautifulSoup(result.content, "html.parser")
+    icon_link = soup.find("link", rel="shortcut icon")
+
+    if icon_link and 'href' in icon_link:
+        return icon_link['href']
+
+    parse = urlparse(url)
+    return parse.scheme + "://" + parse.netloc + "/favicon.ico"

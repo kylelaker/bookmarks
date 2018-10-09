@@ -53,10 +53,8 @@ def api_post():
     except ValueError:
         return json.dumps({'error': 'Invalid JSON'}), 400
 
-    if 'key' not in request_data:
-        return json.dumps({'error': 'No API key provided'}), 403
-    elif (request_data['key'] != key):
-        return json.dumps({'error': 'Invalid key'}), 401
+    if not validate_key(request_data):
+        return (json.dumps({'error': 'Invalid API key'}), 403)
 
     for bookmark in request_data['bookmarks']:
         if not bookmark_exists(bookmark):
@@ -71,7 +69,9 @@ def api_post():
             if not desc:
                 return json.dumps({'error': 'No description available'}), 400
 
-            db.session.add(Bookmark(url=bookmark['url'], desc=desc))
+            favicon = util.get_favicon_link(bookmark['url'])
+
+            db.session.add(Bookmark(url=bookmark['url'], desc=desc, favicon=favicon))
 
     db.session.commit()
 
@@ -86,11 +86,23 @@ def api_get_bookmark(id):
 
 @app.route("/api/bookmarks/<int:id>", methods=['DELETE'])
 def api_delete_bookmark(id):
+    try:
+        request_data = json.loads(request.data)
+    except ValueError:
+        return json.dumps({'error': 'Invalid JSON'}), 400
+
+    if not validate_key(request_data):
+        return (json.dumps({'error': 'Invalid API key'}), 403)
+
     bookmark = Bookmark.query.filter_by(id=id).first_or_404()
     db.session.delete(bookmark)
     db.session.commit()
     response = {'error': None, 'bookmark': bookmark}
     return json.dumps(response, cls=BookmarkEncoder)
+
+
+def validate_key(data):
+    return ('key' in data) and (data['key'] == key)
 
 
 def bookmark_exists(bookmark):

@@ -14,6 +14,7 @@ class Bookmark(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.Text, unique=True, nullable=False)
     desc = db.Column(db.String(80), nullable=False)
+    favicon = db.Column(db.Text, unique=False, nullable=True)
 
     def __repr__(self):
         return ("<Bookmark %r, %r>" % (self.url, self.desc))
