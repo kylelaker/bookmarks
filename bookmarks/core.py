@@ -5,53 +5,84 @@ from flask import (
     render_template,
     request
 )
+from flask_sqlalchemy import SQLAlchemy as sqlalchemy
 
 
 app = Flask(__name__)
-bookmark_file = 'bookmarks.json'
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///bookmarks.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = sqlalchemy(app)
+
 key_file = "key.json"
-bookmarks = []
 key = ""
-err_response = {'error': 'Invalid key'}
+
 
 @app.before_first_request
-def load_bookmarks():
-    global bookmarks
+def init():
+    db.create_all()
     global key
-    with open(bookmark_file, "r") as bookmark_data:
-        bookmarks = json.load(bookmark_data)
-
     with open(key_file, "r") as key_data:
         key = json.load(key_data)['key']
 
 
 @app.route("/")
 def hello():
-    return render_template("page.html", bookmarks=bookmarks)
+    return render_template("page.html", bookmarks=Bookmark.query.all())
 
+@app.route("/api/bookmarks", methods=['GET'])
+def api_get():
+    return json.dumps(Bookmark.query.all(), cls=BookmarkEncoder)
 
-@app.route("/api/bookmarks", methods=['GET', 'POST', 'PUT'])
-def api():
-    global bookmarks
+@app.route("/api/bookmarks", methods=['POST'])
+def api_post():
     if request.method == 'GET':
-        return json.dumps(bookmarks)
+        return json.dumps(Bookmark.query.all(), cls=BookmarkEncoder)
 
-    request_data = json.loads(request.data)
-    if (request_data['key'] != key):
-        return json.dumps(err_response);
+    try:
+        request_data = json.loads(request.data)
+    except ValueError:
+        return json.dumps({'error': 'Invalid JSON'}), 400
 
-    if request.method == 'PUT':
-        bookmarks = request_data['bookmarks']
-    elif request.method == 'POST':
-        for bookmark in request_data['bookmarks']:
-            if bookmark not in bookmarks:
-                bookmarks.append(bookmark)
+    if 'key' not in request_data:
+        return json.dumps({'error': 'No API key provided'}), 403
+    elif (request_data['key'] != key):
+        return json.dumps({'error': 'Invalid key'}), 401
 
-    # Write out the bookmark data so it will be there when the app launches
-    # next
-    with open(bookmark_file, "w+") as bookmark_out:
-        json.dump(bookmarks, bookmark_out)
+    for bookmark in request_data['bookmarks']:
+        if not bookmark_exists(bookmark):
+            db.session.add(Bookmark(url=bookmark['url'], desc=bookmark['desc']))
 
-    response = {'error': None, 'bookmarks': bookmarks}
+    db.session.commit()
 
-    return json.dumps(response)
+    response = {'error': None, 'bookmarks': Bookmark.query.all()}
+
+    return json.dumps(response, cls=BookmarkEncoder)
+
+
+class Bookmark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.Text, unique=True, nullable=False)
+    desc = db.Column(db.String(80), nullable=False)
+
+    def __repr__(self):
+        return ("<Bookmark %r, %r>" % (self.url, self.desc))
+
+
+class BookmarkEncoder(json.JSONEncoder):
+    def default(self, o):
+        return {'id': o.id, 'url': o.url, 'desc': o.desc}
+
+
+def bookmark_decode(json_obj):
+    if 'id' in json_obj and 'url' in json_obj and 'desc' in json_obj:
+        return Bookmark(id=id, url=url, desc=desc)
+
+
+def bookmark_exists(bookmark):
+    for bmark in Bookmark.query.all():
+        if bmark.url == bookmark['url'] or bmark.desc == bookmark['desc']:
+            return True
+    return False
+
+def main():
+    pass

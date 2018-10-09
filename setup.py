@@ -23,6 +23,7 @@ VERSION = None
 REQUIRED = [
     'requests', 
     'flask',
+    'flask-sqlalchemy',
 ]
 
 EXTRAS = {
