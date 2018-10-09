@@ -12,20 +12,15 @@
         <h1 class="mt-5">{{ user }}'s Bookmarks</h1>
         <p class="lead">&nbsp;</p>
         <ul class="list-group">
-            {%- for bookmark in bookmarks %}
+            {% for bookmark in bookmarks -%}
             <li class="list-group-item">
-                {%- if bookmark.favicon %}
+                {% if bookmark.favicon -%}
                 <img class="site-favicon" src="{{ bookmark.favicon }}" />
                 {% endif -%}
-                <a href="{{ bookmark.url }}">{{ bookmark.desc }}</a>
+                <a target="_blank" href="{{ bookmark.url }}">{{ bookmark.desc }}</a>
             </li>
             {% endfor -%}
         </ul>
         </main>
-        <footer class="footer">
-            <div class="container">
-                <span class="text-muted">&copy; 2018 Kyle Laker</span>
-            </div>
-        </footer>
     </body>
 </html>

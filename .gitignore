@@ -93,3 +93,6 @@ ENV/
 # Custom
 *.db
 *.json
+
+# PyCharm
+.idea/

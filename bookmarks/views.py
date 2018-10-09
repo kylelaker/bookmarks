@@ -1,7 +1,11 @@
+"""
+Various views for the app.
+"""
+
+from datetime import datetime
 import json
 
 from flask import (
-    Flask,
     render_template,
     request
 )
@@ -16,7 +20,6 @@ from bookmarks.db import (
     BookmarkEncoder,
 )
 
-
 config_file = "config.json"
 key = ""
 user = ""
@@ -24,6 +27,10 @@ user = ""
 
 @app.before_first_request
 def init():
+    """
+    Initialize the app. This creates the database if it does not exist and loads in the configuration.
+    """
+
     db.create_all()
     global key
     global user
@@ -34,7 +41,7 @@ def init():
 
 
 @app.route("/")
-def hello():
+def bookmarks():
     return render_template("page.html", user=user, bookmarks=Bookmark.query.all())
 
 
@@ -54,11 +61,13 @@ def api_post():
         return json.dumps({'error': 'Invalid JSON'}), 400
 
     if not validate_key(request_data):
-        return (json.dumps({'error': 'Invalid API key'}), 403)
+        return json.dumps({'error': 'Invalid API key'}), 403
+
+    app.logger.info("Starting processing")
 
     for bookmark in request_data['bookmarks']:
         if not bookmark_exists(bookmark):
-            if not 'url' in bookmark:
+            if 'url' not in bookmark:
                 return json.dumps({'error': 'No URL given'}), 400
 
             if 'desc' in bookmark:
@@ -75,6 +84,7 @@ def api_post():
 
     db.session.commit()
 
+    app.logger.info("Processing complete")
     response = {'error': None, 'bookmarks': Bookmark.query.all()}
 
     return json.dumps(response, cls=BookmarkEncoder)
@@ -84,6 +94,7 @@ def api_post():
 def api_get_bookmark(id):
     return json.dumps(Bookmark.query.filter_by(id=id).first_or_404(), cls=BookmarkEncoder)
 
+
 @app.route("/api/bookmarks/<int:id>", methods=['DELETE'])
 def api_delete_bookmark(id):
     try:
@@ -92,7 +103,7 @@ def api_delete_bookmark(id):
         return json.dumps({'error': 'Invalid JSON'}), 400
 
     if not validate_key(request_data):
-        return (json.dumps({'error': 'Invalid API key'}), 403)
+        return json.dumps({'error': 'Invalid API key'}), 403
 
     bookmark = Bookmark.query.filter_by(id=id).first_or_404()
     db.session.delete(bookmark)
@@ -115,4 +126,8 @@ def bookmark_exists(bookmark):
 
 
 def main():
-    app.run()
+    app.run(host="0.0.0.0", port=8080)
+
+
+if __name__ == '__main__':
+    main()
