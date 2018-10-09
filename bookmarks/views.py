@@ -31,9 +31,11 @@ def init():
 def hello():
     return render_template("page.html", bookmarks=Bookmark.query.all())
 
+
 @app.route("/api/bookmarks", methods=['GET'])
 def api_get():
     return json.dumps(Bookmark.query.all(), cls=BookmarkEncoder)
+
 
 @app.route("/api/bookmarks", methods=['POST'])
 def api_post():
@@ -67,5 +69,6 @@ def bookmark_exists(bookmark):
             return True
     return False
 
+
 def main():
-    pass
+    app.run()
