@@ -1,10 +1,10 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>Bookmarks</title>
+        <title>{{ user }}'s Bookmarks</title>
     </head>
     <body>
-        <h1>Bookmarks</h1>
+        <h1>{{ user }}'s Bookmarks</h1>
         <ul>
             {% for bookmark in bookmarks %}
             <li><a href="{{ bookmark.url }}">{{ bookmark.desc }}</a></li>

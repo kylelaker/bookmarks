@@ -17,21 +17,25 @@ from bookmarks.db import (
 )
 
 
-key_file = "key.json"
+config_file = "config.json"
 key = ""
+user = ""
 
 
 @app.before_first_request
 def init():
     db.create_all()
     global key
-    with open(key_file, "r") as key_data:
-        key = json.load(key_data)['key']
+    global user
+    with open(config_file, "r") as config_data:
+        config = json.load(config_data)
+        key = config['key']
+        user = config['user']
 
 
 @app.route("/")
 def hello():
-    return render_template("page.html", bookmarks=Bookmark.query.all())
+    return render_template("page.html", user=user, bookmarks=Bookmark.query.all())
 
 
 @app.route("/api/bookmarks", methods=['GET'])
@@ -73,6 +77,19 @@ def api_post():
 
     response = {'error': None, 'bookmarks': Bookmark.query.all()}
 
+    return json.dumps(response, cls=BookmarkEncoder)
+
+
+@app.route("/api/bookmarks/<int:id>", methods=['GET'])
+def api_get_bookmark(id):
+    return json.dumps(Bookmark.query.filter_by(id=id).first_or_404(), cls=BookmarkEncoder)
+
+@app.route("/api/bookmarks/<int:id>", methods=['DELETE'])
+def api_delete_bookmark(id):
+    bookmark = Bookmark.query.filter_by(id=id).first_or_404()
+    db.session.delete(bookmark)
+    db.session.commit()
+    response = {'error': None, 'bookmark': bookmark}
     return json.dumps(response, cls=BookmarkEncoder)
 
 
