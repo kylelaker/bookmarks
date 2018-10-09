@@ -6,8 +6,10 @@ from flask import (
     request
 )
 
-from bookmarks import app
-
+from bookmarks import (
+    app,
+    util,
+)
 from bookmarks.db import (
     db,
     Bookmark,
@@ -54,7 +56,18 @@ def api_post():
 
     for bookmark in request_data['bookmarks']:
         if not bookmark_exists(bookmark):
-            db.session.add(Bookmark(url=bookmark['url'], desc=bookmark['desc']))
+            if not 'url' in bookmark:
+                return json.dumps({'error': 'No URL given'}), 400
+
+            if 'desc' in bookmark:
+                desc = bookmark['desc']
+            else:
+                desc = util.get_page_title(bookmark['url'])
+
+            if not desc:
+                return json.dumps({'error': 'No description available'}), 400
+
+            db.session.add(Bookmark(url=bookmark['url'], desc=desc))
 
     db.session.commit()
 
@@ -65,7 +78,9 @@ def api_post():
 
 def bookmark_exists(bookmark):
     for bmark in Bookmark.query.all():
-        if bmark.url == bookmark['url'] or bmark.desc == bookmark['desc']:
+        if bmark.url == bookmark['url']:
+            return True
+        if 'desc' in bookmark and bmark.url == bookmark['url']:
             return True
     return False
 

@@ -2,11 +2,13 @@ import json
 
 from flask_sqlalchemy import SQLAlchemy as sqlalchemy
 
+import bookmarks.util
 from bookmarks import app
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///bookmarks.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = sqlalchemy(app)
+
 
 class Bookmark(db.Model):
     id = db.Column(db.Integer, primary_key=True)

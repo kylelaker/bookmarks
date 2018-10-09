@@ -21,6 +21,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 VERSION = None
 
 REQUIRED = [
+    'beautifulsoup4',
     'requests', 
     'flask',
     'flask-sqlalchemy',
