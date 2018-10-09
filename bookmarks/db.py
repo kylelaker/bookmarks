@@ -22,7 +22,7 @@ class Bookmark(db.Model):
 
 class BookmarkEncoder(json.JSONEncoder):
     def default(self, o):
-        return {'id': o.id, 'url': o.url, 'desc': o.desc}
+        return {'id': o.id, 'url': o.url, 'desc': o.desc, 'favicon': o.favicon}
 
 
 def bookmark_decode(json_obj):

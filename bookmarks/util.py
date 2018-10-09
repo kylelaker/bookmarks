@@ -19,10 +19,16 @@ def get_page_title(url, max_len=None):
 def get_favicon_link(url):
     result = requests.get(url)
     soup = BeautifulSoup(result.content, "html.parser")
-    icon_link = soup.find("link", rel="shortcut icon")
+    icon_link = soup.find("link", rel="icon")
 
-    if icon_link and 'href' in icon_link:
+    if icon_link:
         return icon_link['href']
 
     parse = urlparse(url)
-    return parse.scheme + "://" + parse.netloc + "/favicon.ico"
+    test_link = parse.scheme + "://" + parse.netloc + "/favicon.ico"
+
+    # If sites don't allow/block automated traffic, use the guessed favicon
+    if requests.get(url).status_code in (200, 429):
+        return test_link
+
+    return None
