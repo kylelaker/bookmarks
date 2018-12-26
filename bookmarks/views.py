@@ -21,27 +21,22 @@ from bookmarks.db import (
 )
 
 config_file = "config.json"
-key = ""
-user = ""
+config = {}
 
 
 @app.before_first_request
 def init():
     """
-    Initialize the app. This creates the database if it does not exist and loads in the configuration.
+    Initialize the app. This creates the database if it does not exist and
+    loads in the configuration.
     """
 
     db.create_all()
-    global key
-    global user
-    with open(config_file, "r") as config_data:
-        config = json.load(config_data)
-        key = config['key']
-        user = config['user']
 
 
 @app.route("/")
 def bookmarks():
+    user = config["user"]
     return render_template("page.html", user=user, bookmarks=Bookmark.query.all())
 
 
@@ -113,7 +108,7 @@ def api_delete_bookmark(id):
 
 
 def validate_key(data):
-    return ('key' in data) and (data['key'] == key)
+    return ('key' in data) and (data['key'] == config['key'])
 
 
 def bookmark_exists(bookmark):
@@ -126,7 +121,12 @@ def bookmark_exists(bookmark):
 
 
 def main():
-    app.run(host="0.0.0.0", port=8080)
+    global config
+    with open(config_file, "r") as config_data:
+        config = json.load(config_data)
+    host = config.get("host", "0.0.0.0")
+    port = config.get("port", 8080)
+    app.run(host=host, port=port)
 
 
 if __name__ == '__main__':
