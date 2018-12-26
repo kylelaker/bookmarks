@@ -1,10 +1,10 @@
 from urllib.parse import urlparse
-from urllib.request import urlopen
 
 import requests
 from bs4 import BeautifulSoup
 
 from bookmarks import app
+
 
 _CACHE = {}
 
